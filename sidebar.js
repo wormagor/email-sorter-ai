@@ -133,11 +133,14 @@ function testAPI(provider) {
   const btn = document.getElementById(btnId);
   const resultEl = document.getElementById(resultId);
 
+  const apiKey = provider === 'openai' ? currentSettings.openaiKey : currentSettings.claudeKey;
+  const model = provider === 'openai' ? currentSettings.openaiModel : currentSettings.claudeModel;
+
   // Read latest value from inputs
   const keyEl = document.getElementById(provider === 'openai' ? 'openaiKey' : 'claudeKey');
   const modelEl = document.getElementById(provider === 'openai' ? 'openaiModel' : 'claudeModel');
-  const key = keyEl ? keyEl.value : '';
-  const mod = modelEl ? modelEl.value : '';
+  const key = keyEl ? keyEl.value : apiKey;
+  const mod = modelEl ? modelEl.value : model;
 
   if (!key || key.trim().length === 0) {
     if (resultEl) { resultEl.textContent = 'Zadejte API klic'; resultEl.className = 'api-test-result error'; }

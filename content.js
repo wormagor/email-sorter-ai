@@ -1,4 +1,4 @@
-// Email Sorter AI - Content Script v3.6.0
+// Email Sorter AI - Content Script v3.6.1
 // FIX: Listen for postMessage from sidebar iframe for close button
 (function() {
   'use strict';
@@ -23,7 +23,7 @@
 
     const panel = document.createElement('div');
     panel.id = 'email-sorter-panel';
-    panel.innerHTML = '<div id="es-panel-toggle" class="es-panel-header"><span>📧 Email Sorter AI</span><span id="es-version">v3.6.0</span><span id="es-arrow">▼</span></div><div id="es-panel-body" class="es-panel-body"><div class="es-panel-status"><span class="es-dot es-idle" id="es-dot"></span><span id="es-panel-status-text">Pripraven</span></div><div id="es-panel-stats" class="es-panel-stats">Dnes: 0 zpracovano, 0 oznaceno</div><div id="es-panel-recent" class="es-panel-recent"><div id="es-recent-toggle" class="es-recent-header">Nove oznacene (0) <span id="es-recent-arrow">▶</span></div><div id="es-recent-list" class="es-recent-list"></div></div><div class="es-panel-actions"><button id="es-btn-process" class="es-btn es-btn-primary">▶ Zpracovat</button><button id="es-btn-settings" class="es-btn es-btn-secondary">⚙ Nastaveni</button></div><div id="es-panel-result" class="es-panel-result"></div></div>';
+    panel.innerHTML = '<div id="es-panel-toggle" class="es-panel-header"><span>📧 Email Sorter AI</span><span id="es-version">v3.6.1</span><span id="es-arrow">▼</span></div><div id="es-panel-body" class="es-panel-body"><div class="es-panel-status"><span class="es-dot es-idle" id="es-dot"></span><span id="es-panel-status-text">Pripraven</span></div><div id="es-panel-stats" class="es-panel-stats">Dnes: 0 zpracovano, 0 oznaceno</div><div id="es-panel-recent" class="es-panel-recent"><div id="es-recent-toggle" class="es-recent-header">Nove oznacene (0) <span id="es-recent-arrow">▶</span></div><div id="es-recent-list" class="es-recent-list"></div></div><div class="es-panel-actions"><button id="es-btn-process" class="es-btn es-btn-primary">▶ Zpracovat</button><button id="es-btn-settings" class="es-btn es-btn-secondary">⚙ Nastaveni</button></div><div id="es-panel-result" class="es-panel-result"></div></div>';
     document.body.appendChild(panel);
     bindEvents();
   }
@@ -50,7 +50,7 @@
       if (msg.action === 'closeSidebar') closeSidebar();
     });
 
-    // FIX v3.6.0: Listen for postMessage from sidebar iframe (close button)
+    // FIX v3.6.1: Listen for postMessage from sidebar iframe (close button)
     window.addEventListener('message', (event) => {
       if (event.data && event.data.action === 'emailSorterClose') {
         closeSidebar();
