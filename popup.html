@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Email Sorter AI v3.6.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{width:380px;font-family:'Google Sans','Segoe UI',system-ui,sans-serif;background:#f8f9fa;color:#333}
+.header{background:linear-gradient(135deg,#1a73e8,#1557b0);color:#fff;padding:16px;text-align:center}.header h1{font-size:16px;font-weight:500}.header p{font-size:11px;opacity:.8;margin-top:4px}
+.update-banner{display:none;background:#fef7e0;border:1px solid #f9ab00;border-radius:8px;padding:10px 14px;margin:10px 16px 0;font-size:12px;color:#6d4c00}.update-banner.show{display:block}.update-banner a{color:#1a73e8;font-weight:600;text-decoration:none}
+.section{padding:12px 16px}.section-title{font-size:12px;font-weight:600;color:#5f6368;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0}.toggle-row:last-child{border-bottom:none}.toggle-label{font-size:14px}
+.toggle-switch{width:44px;height:24px;border-radius:12px;background:#dadce0;cursor:pointer;position:relative;transition:background .3s}.toggle-switch.active{background:#1a73e8}.toggle-switch::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.toggle-switch.active::after{left:22px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat-card{background:#fff;border-radius:8px;padding:12px;text-align:center;border:1px solid #e0e0e0}.stat-value{font-size:24px;font-weight:600;color:#1a73e8}.stat-label{font-size:11px;color:#5f6368;margin-top:2px}
+.api-section{padding:0 16px 8px}.api-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0}.api-row:last-child{border-bottom:none}.api-name{flex:1;font-size:13px}
+.api-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}.api-dot.on{background:#34a853}.api-dot.off{background:#dadce0}
+.btn-test-api{padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid #dadce0;background:#fff;font-family:inherit;transition:all .2s}.btn-test-api:hover{background:#e8f0fe;border-color:#1a73e8;color:#1a73e8}.btn-test-api:disabled{opacity:.5;cursor:not-allowed}.btn-test-api.success{background:#e6f4ea;border-color:#34a853;color:#137333}.btn-test-api.error{background:#fce8e6;border-color:#ea4335;color:#c5221f}
+.api-result{font-size:11px;padding:4px 0;color:#5f6368;display:none;word-break:break-all}.api-result.show{display:block}.api-result.success{color:#137333}.api-result.error{color:#c5221f}
+.actions{display:flex;gap:8px;padding:12px 16px}.btn{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}.btn:disabled{opacity:.6;cursor:not-allowed}.btn-primary{background:#1a73e8;color:#fff}.btn-primary:hover:not(:disabled){background:#1557b0}.btn-secondary{background:#fff;color:#5f6368;border:1px solid #dadce0}.btn-secondary:hover:not(:disabled){background:#f1f3f4}
+.footer{text-align:center;padding:8px 16px 12px;font-size:11px;color:#9aa0a6}.footer a{color:#1a73e8;text-decoration:none}.footer a:hover{text-decoration:underline}
+.status-message{position:fixed;bottom:0;left:0;right:0;padding:10px;text-align:center;font-size:13px;background:#34a853;color:#fff;transform:translateY(100%);transition:transform .3s}.status-message.show{transform:translateY(0)}.status-message.error{background:#ea4335}
+</style></head><body>
+<div class="header"><h1>Email Sorter AI v3.6.0</h1><p>Inteligentni trideni emailu</p></div>
+<div class="update-banner" id="updateBanner"><strong>Nova verze!</strong> <span id="updateVersionText"></span><br><a href="#" id="updateLink" target="_blank">Stahnout</a></div>
+<div class="section"><div class="section-title">Nastaveni</div>
+<div class="toggle-row"><span class="toggle-label">Auto-sken</span><div class="toggle-switch" id="toggleAutoScan"></div></div>
+<div class="toggle-row"><span class="toggle-label">Pravidlovy engine</span><div class="toggle-switch" id="toggleRulesEngine"></div></div>
+<div class="toggle-row"><span class="toggle-label">AI klasifikace</span><div class="toggle-switch" id="toggleAI"></div></div>
+<div class="toggle-row"><span class="toggle-label">Parsovat prilohy</span><div class="toggle-switch" id="toggleAttachments"></div></div></div>
+<div class="section"><div class="section-title">Statistiky</div><div class="stats-grid">
+<div class="stat-card"><div class="stat-value" id="statProcessed">0</div><div class="stat-label">Zpracovano</div></div>
+<div class="stat-card"><div class="stat-value" id="statLabeled">0</div><div class="stat-label">Oznaceno</div></div>
+<div class="stat-card"><div class="stat-value" id="statRules">0</div><div class="stat-label">Pravidla</div></div>
+<div class="stat-card"><div class="stat-value" id="statAI">0</div><div class="stat-label">AI</div></div></div></div>
+<div class="api-section"><div class="section-title">API Status</div>
+<div class="api-row"><span class="api-name"><span class="api-dot off" id="openaiDot"></span> OpenAI</span><button class="btn-test-api" id="testOpenAI">Otestovat</button></div><div class="api-result" id="openaiResult"></div>
+<div class="api-row"><span class="api-name"><span class="api-dot off" id="claudeDot"></span> Claude</span><button class="btn-test-api" id="testClaude">Otestovat</button></div><div class="api-result" id="claudeResult"></div></div>
+<div class="actions"><button class="btn btn-primary" id="processBtn">Zpracovat</button><button class="btn btn-secondary" id="settingsBtn">Nastaveni</button></div>
+<div class="footer">v3.6.0 • <a href="#" id="checkUpdateBtn">Zkontrolovat aktualizace</a></div>
+<div class="status-message" id="statusMessage"></div>
+<script src="popup.js"></script></body></html>
