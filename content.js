@@ -1,4 +1,4 @@
-// Email Sorter AI - Content Script v3.6.1
+// Email Sorter AI - Content Script v3.6.2
 // FIX: Listen for postMessage from sidebar iframe for close button
 (function() {
   'use strict';
@@ -18,12 +18,12 @@
     if (document.getElementById('email-sorter-toolbar')) return;
     const toolbar = document.createElement('div');
     toolbar.id = 'email-sorter-toolbar';
-    toolbar.innerHTML = '<button id="es-process-btn" title="Email Sorter AI">📧 <span id="es-status-text">Pripraven</span></button>';
+    toolbar.innerHTML = '<button id="es-process-btn" title="Email Sorter AI">\ud83d\udce7 <span id="es-status-text">Pripraven</span></button>';
     document.body.appendChild(toolbar);
 
     const panel = document.createElement('div');
     panel.id = 'email-sorter-panel';
-    panel.innerHTML = '<div id="es-panel-toggle" class="es-panel-header"><span>📧 Email Sorter AI</span><span id="es-version">v3.6.1</span><span id="es-arrow">▼</span></div><div id="es-panel-body" class="es-panel-body"><div class="es-panel-status"><span class="es-dot es-idle" id="es-dot"></span><span id="es-panel-status-text">Pripraven</span></div><div id="es-panel-stats" class="es-panel-stats">Dnes: 0 zpracovano, 0 oznaceno</div><div id="es-panel-recent" class="es-panel-recent"><div id="es-recent-toggle" class="es-recent-header">Nove oznacene (0) <span id="es-recent-arrow">▶</span></div><div id="es-recent-list" class="es-recent-list"></div></div><div class="es-panel-actions"><button id="es-btn-process" class="es-btn es-btn-primary">▶ Zpracovat</button><button id="es-btn-settings" class="es-btn es-btn-secondary">⚙ Nastaveni</button></div><div id="es-panel-result" class="es-panel-result"></div></div>';
+    panel.innerHTML = '<div id="es-panel-toggle" class="es-panel-header"><span>\ud83d\udce7 Email Sorter AI</span><span id="es-version">v3.6.2</span><span id="es-arrow">\u25bc</span></div><div id="es-panel-body" class="es-panel-body"><div class="es-panel-status"><span class="es-dot es-idle" id="es-dot"></span><span id="es-panel-status-text">Pripraven</span></div><div id="es-panel-stats" class="es-panel-stats">Dnes: 0 zpracovano, 0 oznaceno</div><div id="es-panel-recent" class="es-panel-recent"><div id="es-recent-toggle" class="es-recent-header">Nove oznacene (0) <span id="es-recent-arrow">\u25b6</span></div><div id="es-recent-list" class="es-recent-list"></div></div><div class="es-panel-actions"><button id="es-btn-process" class="es-btn es-btn-primary">\u25b6 Zpracovat</button><button id="es-btn-settings" class="es-btn es-btn-secondary">\u2699 Nastaveni</button></div><div id="es-panel-result" class="es-panel-result"></div></div>';
     document.body.appendChild(panel);
     bindEvents();
   }
@@ -32,12 +32,12 @@
     document.getElementById('es-panel-toggle').addEventListener('click', () => {
       panelOpen = !panelOpen;
       document.getElementById('es-panel-body').style.display = panelOpen ? 'block' : 'none';
-      document.getElementById('es-arrow').textContent = panelOpen ? '▲' : '▼';
+      document.getElementById('es-arrow').textContent = panelOpen ? '\u25b2' : '\u25bc';
     });
     document.getElementById('es-recent-toggle').addEventListener('click', (e) => {
       e.stopPropagation(); recentOpen = !recentOpen;
       document.getElementById('es-recent-list').style.display = recentOpen ? 'block' : 'none';
-      document.getElementById('es-recent-arrow').textContent = recentOpen ? '▼' : '▶';
+      document.getElementById('es-recent-arrow').textContent = recentOpen ? '\u25bc' : '\u25b6';
     });
     document.getElementById('es-btn-process').addEventListener('click', (e) => { e.stopPropagation(); processNow(); });
     document.getElementById('es-process-btn').addEventListener('click', () => processNow());
