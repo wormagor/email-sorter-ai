@@ -134,7 +134,6 @@ async function checkForUpdates() {
     chrome.action.setBadgeText({text:hasUpdate?'!':''});
     if (hasUpdate) {
       chrome.action.setBadgeBackgroundColor({color:'#ea4335'});
-      // Auto-download update ZIP
       try { await downloadUpdate(info.downloadUrl, rv); } catch(e) {}
     }
     return {success:true,...info};
@@ -151,7 +150,6 @@ async function downloadUpdate(url, version) {
       saveAs: false
     });
     await chrome.storage.local.set({lastDownloadedVersion:version,downloadId});
-    // Show notification
     chrome.notifications.create('update-downloaded',{
       type:'basic',
       iconUrl:'icons/icon128.png',
@@ -168,10 +166,11 @@ function cmpVer(a,b) { const pa=a.split('.').map(Number),pb=b.split('.').map(Num
 
 async function getValidToken(interactive) {
   try {
-    const token = await chrome.identity.getAuthToken({interactive});
+    const result = await chrome.identity.getAuthToken({interactive});
+    const token = (typeof result === 'string') ? result : result?.token;
     if (!token) { if(interactive) throw new Error('Token nebyl ziskan'); return null; }
     const r = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile',{headers:{'Authorization':'Bearer '+token}});
-    if (!r.ok) { if(r.status===401){await chrome.identity.removeCachedAuthToken({token});return await chrome.identity.getAuthToken({interactive})||null;} throw new Error('API chyba: '+r.status); }
+    if (!r.ok) { if(r.status===401){await chrome.identity.removeCachedAuthToken({token:token});const r2=await chrome.identity.getAuthToken({interactive});return (typeof r2==='string')?r2:r2?.token||null;} throw new Error('API chyba: '+r.status); }
     return token;
   } catch(e) { if(!interactive) return null; throw e; }
 }
@@ -196,7 +195,7 @@ async function processNewEmails(interactive, settings) {
           try{const ar=await aiEngine.classify(parsed,att,settings.rules);if(ar&&ar.confidence>=settings.confidenceThreshold){label=ar.label;status.aiMatched++;}}catch(e){}
         }
         if(label){try{await gmail.ensureLabel(label);await gmail.addLabel(m.id,label);status.labeled++;}catch(e){}}
-        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}}
+        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}
         status.processed++;
       } catch(e){continue;}
     }
