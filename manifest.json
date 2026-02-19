@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Email Sorter AI",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhWZsGGBmTlAIJTlMrxoZbcdc003ee9BE1FsQ4OiwNfiYeap0tJD4+9pzwhi5IWK0ynqvGuERJU599irIA0NgfV3yE/SR4dAZEjpS8uPUqboGfPcCJdWVVfUo/O6v9Yqf7HrUegM8WUZZzbG1AocQNSYJo+ZjY1RqrXOLE9+FLGcBp81gP771Ssx9qJADO7zit8Wmc3WWcwGlkWaEpSjgm8Zay7iXotuDzeTpidPzt1I3n+kONr/WK5I0/WxgOLKe2gZewjF+6GeQq18t0VOCb3L0Vzi+2YJQHhRDcO5gatKssE8wg07E0W7vhtEJUfRs1qpe46FxRSITj/qSlMpwDwIDAQAB",
   "version": "3.6.1",
   "description": "Inteligentni trideni emailu podporovane pravidly a umelou inteligenci",
   "permissions": ["identity","identity.email","storage","alarms","tabs","scripting","downloads","notifications"],
