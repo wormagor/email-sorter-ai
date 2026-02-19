@@ -1,5 +1,5 @@
 {
-  "version": "3.6.1",
-  "changelog": "v3.6.1: Fix sidebar close button (postMessage), fix auto-update download",
+  "version": "3.6.2",
+  "changelog": "v3.6.2: Switch to launchWebAuthFlow for OAuth, fix clear token button visibility",
   "downloadUrl": "https://github.com/wormagor/email-sorter-ai/archive/refs/heads/main.zip"
 }
