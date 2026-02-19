@@ -2,14 +2,14 @@
   "manifest_version": 3,
   "name": "Email Sorter AI",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhWZsGGBmTlAIJTlMrxoZbcdc003ee9BE1FsQ4OiwNfiYeap0tJD4+9pzwhi5IWK0ynqvGuERJU599irIA0NgfV3yE/SR4dAZEjpS8uPUqboGfPcCJdWVVfUo/O6v9Yqf7HrUegM8WUZZzbG1AocQNSYJo+ZjY1RqrXOLE9+FLGcBp81gP771Ssx9qJADO7zit8Wmc3WWcwGlkWaEpSjgm8Zay7iXotuDzeTpidPzt1I3n+kONr/WK5I0/WxgOLKe2gZewjF+6GeQq18t0VOCb3L0Vzi+2YJQHhRDcO5gatKssE8wg07E0W7vhtEJUfRs1qpe46FxRSITj/qSlMpwDwIDAQAB",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "description": "Inteligentni trideni emailu podporovane pravidly a umelou inteligenci",
   "permissions": ["identity","identity.email","storage","alarms","tabs","scripting","downloads","notifications"],
   "host_permissions": ["https://www.googleapis.com/*","https://api.openai.com/*","https://api.anthropic.com/*","https://mail.google.com/*","https://raw.githubusercontent.com/*"],
   "background": {"service_worker": "background.js", "type": "module"},
   "content_scripts": [{"matches": ["https://mail.google.com/*"], "js": ["content.js"], "css": ["styles.css"], "run_at": "document_idle"}],
   "web_accessible_resources": [{"resources": ["sidebar.html","sidebar.css","sidebar.js"], "matches": ["https://mail.google.com/*"]}],
-  "action": {"default_popup": "popup.html", "default_title": "Email Sorter AI v3.6.1"},
+  "action": {"default_popup": "popup.html", "default_title": "Email Sorter AI v3.6.2"},
   "icons": {"16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png"},
   "oauth2": {"client_id": "22130421265-3hipbr33ade7t5hg2apljm5m8i01v926.apps.googleusercontent.com", "scopes": ["https://www.googleapis.com/auth/gmail.modify","email"]}
 }
