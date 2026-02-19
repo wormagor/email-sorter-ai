@@ -78,6 +78,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get('updateInfo', r => sendResponse(r.updateInfo || null));
     return true;
   }
+  if (message.action === 'downloadUpdate') {
+    downloadUpdate(message.url, message.version).then(r=>sendResponse(r)).catch(e=>sendResponse({success:false,error:e.message}));
+    return true;
+  }
   // FIX v3.6.0: Forward closeSidebar to Gmail tabs (fallback for iframe postMessage)
   if (message.action === 'closeSidebar') {
     chrome.tabs.query({url:'*://mail.google.com/*'}, tabs => {
@@ -99,7 +103,7 @@ async function testAPIKey(provider, apiKey, model) {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
         body:JSON.stringify({model:model||'gpt-4o-mini',messages:[{role:'user',content:'Odpovez jednim slovem: funguje'}],max_tokens:10})
       });
-      if (r.ok) { const d=await r.json(); return {success:true,message:'OpenAI OK! Model: '+(model||'gpt-4o-mini')+', odpoved: "'+(d.choices?.[0]?.message?.content||'').trim()+'"'}; }
+      if (r.ok) { const d=await r.json(); return {success:true,message:'OpenAI OK! Model: '+(model||'gpt-4o-mini')+', odpoved: "'+((d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content)||'').trim()+'"'}; }
       if (r.status===401) return {success:false,error:'Neplatny API klic'};
       if (r.status===429) return {success:false,error:'Rate limit'};
       return {success:false,error:'HTTP '+r.status};
@@ -108,7 +112,7 @@ async function testAPIKey(provider, apiKey, model) {
         method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
         body:JSON.stringify({model:model||'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'Odpovez jednim slovem: funguje'}]})
       });
-      if (r.ok) { const d=await r.json(); return {success:true,message:'Claude OK! Model: '+(model||'claude-sonnet-4-20250514')+', odpoved: "'+(d.content?.[0]?.text||'').trim()+'"'}; }
+      if (r.ok) { const d=await r.json(); return {success:true,message:'Claude OK! Model: '+(model||'claude-sonnet-4-20250514')+', odpoved: "'+((d.content && d.content[0] && d.content[0].text)||'').trim()+'"'}; }
       if (r.status===401) return {success:false,error:'Neplatny API klic'};
       if (r.status===429) return {success:false,error:'Rate limit'};
       return {success:false,error:'HTTP '+r.status};
@@ -128,8 +132,35 @@ async function checkForUpdates() {
     const info = {currentVersion:cv,remoteVersion:rv,hasUpdate,changelog:remote.changelog||'',downloadUrl:remote.downloadUrl||UPDATE_CONFIG.releasesUrl,checkedAt:new Date().toISOString()};
     await chrome.storage.local.set({updateInfo:info});
     chrome.action.setBadgeText({text:hasUpdate?'!':''});
-    if (hasUpdate) chrome.action.setBadgeBackgroundColor({color:'#ea4335'});
+    if (hasUpdate) {
+      chrome.action.setBadgeBackgroundColor({color:'#ea4335'});
+      // Auto-download update ZIP
+      try { await downloadUpdate(info.downloadUrl, rv); } catch(e) {}
+    }
     return {success:true,...info};
+  } catch(e) { return {success:false,error:e.message}; }
+}
+
+async function downloadUpdate(url, version) {
+  if (!url) return {success:false,error:'URL neni k dispozici'};
+  try {
+    const downloadId = await chrome.downloads.download({
+      url: url,
+      filename: 'email-sorter-ai-v'+version+'.zip',
+      conflictAction: 'uniquify',
+      saveAs: false
+    });
+    await chrome.storage.local.set({lastDownloadedVersion:version,downloadId});
+    // Show notification
+    chrome.notifications.create('update-downloaded',{
+      type:'basic',
+      iconUrl:'icons/icon128.png',
+      title:'Email Sorter AI - Aktualizace stazena!',
+      message:'Verze '+version+' byla stazena. Rozbalte ZIP a nahradte soubory rozsireni, pak kliknete "Znovu nacist" na chrome://extensions',
+      priority:2,
+      requireInteraction:true
+    });
+    return {success:true,message:'Aktualizace stazena'};
   } catch(e) { return {success:false,error:e.message}; }
 }
 
@@ -161,11 +192,11 @@ async function processNewEmails(interactive, settings) {
         if (settings.rulesEngineEnabled) { const rm=rulesEngine.classify(parsed); if(rm){label=rm.label;status.rulesMatched++;} }
         if (!label && settings.aiClassificationEnabled) {
           let att='';
-          if (settings.parseAttachments&&parsed.attachments?.length>0) for(const a of parsed.attachments){try{att+='\n['+a.filename+']\n'+await gmail.getAttachment(m.id,a.attachmentId)+'\n';}catch(e){}}
+          if (settings.parseAttachments&&parsed.attachments&&parsed.attachments.length>0) for(const a of parsed.attachments){try{att+='\n['+a.filename+']\n'+await gmail.getAttachment(m.id,a.attachmentId)+'\n';}catch(e){}}
           try{const ar=await aiEngine.classify(parsed,att,settings.rules);if(ar&&ar.confidence>=settings.confidenceThreshold){label=ar.label;status.aiMatched++;}}catch(e){}
         }
         if(label){try{await gmail.ensureLabel(label);await gmail.addLabel(m.id,label);status.labeled++;}catch(e){}}
-        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}
+        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}}
         status.processed++;
       } catch(e){continue;}
     }
