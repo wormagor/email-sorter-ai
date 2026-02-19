@@ -32,6 +32,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.storage.sync.set({settings});
     await chrome.storage.local.set({status:currentStatus});
   }
+  // Clear any cached auth tokens on install/update to prevent stale token issues
+  try { await chrome.identity.clearAllCachedAuthTokens(); console.log('Auth tokens cleared on install/update'); } catch(e) { console.log('clearAllCachedAuthTokens not available:', e.message); }
   await chrome.alarms.create('emailScan',{periodInMinutes:10});
   await chrome.alarms.create('updateCheck',{periodInMinutes:UPDATE_CONFIG.checkIntervalHours*60});
   checkForUpdates();
@@ -93,6 +95,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     getValidToken(message.interactive||false).then(t=>sendResponse({success:true,token:t})).catch(e=>sendResponse({success:false,error:e.message}));
     return true;
   }
+  if (message.action === 'clearAuthTokens') {
+    (async()=>{
+      try { await chrome.identity.clearAllCachedAuthTokens(); sendResponse({success:true,message:'Vsechny tokeny vymazany'}); }
+      catch(e) { sendResponse({success:false,error:e.message}); }
+    })();
+    return true;
+  }
 });
 
 async function testAPIKey(provider, apiKey, model) {
@@ -103,7 +112,7 @@ async function testAPIKey(provider, apiKey, model) {
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
         body:JSON.stringify({model:model||'gpt-4o-mini',messages:[{role:'user',content:'Odpovez jednim slovem: funguje'}],max_tokens:10})
       });
-      if (r.ok) { const d=await r.json(); return {success:true,message:'OpenAI OK! Model: '+(model||'gpt-4o-mini')+', odpoved: "'+((d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content)||'').trim()+'"'}; }
+      if (r.ok) { const d=await r.json(); return {success:true,message:'OpenAI OK! Model: '+(model||'gpt-4o-mini')+', odpoved: "'+(d.choices?.[0]?.message?.content||'').trim()+'"'}; }
       if (r.status===401) return {success:false,error:'Neplatny API klic'};
       if (r.status===429) return {success:false,error:'Rate limit'};
       return {success:false,error:'HTTP '+r.status};
@@ -112,7 +121,7 @@ async function testAPIKey(provider, apiKey, model) {
         method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
         body:JSON.stringify({model:model||'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'Odpovez jednim slovem: funguje'}]})
       });
-      if (r.ok) { const d=await r.json(); return {success:true,message:'Claude OK! Model: '+(model||'claude-sonnet-4-20250514')+', odpoved: "'+((d.content && d.content[0] && d.content[0].text)||'').trim()+'"'}; }
+      if (r.ok) { const d=await r.json(); return {success:true,message:'Claude OK! Model: '+(model||'claude-sonnet-4-20250514')+', odpoved: "'+(d.content?.[0]?.text||'').trim()+'"'}; }
       if (r.status===401) return {success:false,error:'Neplatny API klic'};
       if (r.status===429) return {success:false,error:'Rate limit'};
       return {success:false,error:'HTTP '+r.status};
@@ -134,6 +143,7 @@ async function checkForUpdates() {
     chrome.action.setBadgeText({text:hasUpdate?'!':''});
     if (hasUpdate) {
       chrome.action.setBadgeBackgroundColor({color:'#ea4335'});
+      // Auto-download update ZIP
       try { await downloadUpdate(info.downloadUrl, rv); } catch(e) {}
     }
     return {success:true,...info};
@@ -150,6 +160,7 @@ async function downloadUpdate(url, version) {
       saveAs: false
     });
     await chrome.storage.local.set({lastDownloadedVersion:version,downloadId});
+    // Show notification
     chrome.notifications.create('update-downloaded',{
       type:'basic',
       iconUrl:'icons/icon128.png',
@@ -191,11 +202,11 @@ async function processNewEmails(interactive, settings) {
         if (settings.rulesEngineEnabled) { const rm=rulesEngine.classify(parsed); if(rm){label=rm.label;status.rulesMatched++;} }
         if (!label && settings.aiClassificationEnabled) {
           let att='';
-          if (settings.parseAttachments&&parsed.attachments&&parsed.attachments.length>0) for(const a of parsed.attachments){try{att+='\n['+a.filename+']\n'+await gmail.getAttachment(m.id,a.attachmentId)+'\n';}catch(e){}}
+          if (settings.parseAttachments&&parsed.attachments?.length>0) for(const a of parsed.attachments){try{att+='\n['+a.filename+']\n'+await gmail.getAttachment(m.id,a.attachmentId)+'\n';}catch(e){}}
           try{const ar=await aiEngine.classify(parsed,att,settings.rules);if(ar&&ar.confidence>=settings.confidenceThreshold){label=ar.label;status.aiMatched++;}}catch(e){}
         }
         if(label){try{await gmail.ensureLabel(label);await gmail.addLabel(m.id,label);status.labeled++;}catch(e){}}
-        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}
+        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}}
         status.processed++;
       } catch(e){continue;}
     }
