@@ -2,7 +2,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{width:380px;font-family:'Google Sans','Segoe UI',system-ui,sans-serif;background:#f8f9fa;color:#333}
 .header{background:linear-gradient(135deg,#1a73e8,#1557b0);color:#fff;padding:16px;text-align:center}.header h1{font-size:16px;font-weight:500}.header p{font-size:11px;opacity:.8;margin-top:4px}
-.update-banner{display:none;background:#fef7e0;border:1px solid #f9ab00;border-radius:8px;padding:10px 14px;margin:10px 16px 0;font-size:12px;color:#6d4c00}.update-banner.show{display:block}.update-banner a{color:#1a73e8;font-weight:600;text-decoration:none}
+.update-banner{display:none;background:#fef7e0;border:1px solid #f9ab00;border-radius:8px;padding:10px 14px;margin:10px 16px 0;font-size:12px;color:#6d4c00}.update-banner.show{display:block}.update-banner a{color:#1a73e8;font-weight:600;text-decoration:none}.update-banner small{display:block;margin-top:6px;color:#8a6d00;font-size:10px}.btn-download-update{background:#1a73e8;color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.btn-download-update:hover{background:#1557b0}.btn-download-update:disabled{opacity:.6;cursor:not-allowed}
 .section{padding:12px 16px}.section-title{font-size:12px;font-weight:600;color:#5f6368;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0}.toggle-row:last-child{border-bottom:none}.toggle-label{font-size:14px}
 .toggle-switch{width:44px;height:24px;border-radius:12px;background:#dadce0;cursor:pointer;position:relative;transition:background .3s}.toggle-switch.active{background:#1a73e8}.toggle-switch::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.toggle-switch.active::after{left:22px}
@@ -16,7 +16,7 @@
 .status-message{position:fixed;bottom:0;left:0;right:0;padding:10px;text-align:center;font-size:13px;background:#34a853;color:#fff;transform:translateY(100%);transition:transform .3s}.status-message.show{transform:translateY(0)}.status-message.error{background:#ea4335}
 </style></head><body>
 <div class="header"><h1>Email Sorter AI v3.6.1</h1><p>Inteligentni trideni emailu</p></div>
-<div class="update-banner" id="updateBanner"><strong>Nova verze!</strong> <span id="updateVersionText"></span><br><a href="#" id="updateLink" target="_blank">Stahnout</a></div>
+<div class="update-banner" id="updateBanner"><strong>Nova verze!</strong> <span id="updateVersionText"></span><br><a href="#" id="updateLink" target="_blank">GitHub</a> | <button class="btn-download-update" id="downloadUpdateBtn" style="display:none">Stahnout ZIP</button><br><small>Po stazeni: rozbalte ZIP \u2192 nahradte soubory \u2192 Znovu nacist na chrome://extensions</small></div>
 <div class="section"><div class="section-title">Nastaveni</div>
 <div class="toggle-row"><span class="toggle-label">Auto-sken</span><div class="toggle-switch" id="toggleAutoScan"></div></div>
 <div class="toggle-row"><span class="toggle-label">Pravidlovy engine</span><div class="toggle-switch" id="toggleRulesEngine"></div></div>
@@ -31,6 +31,6 @@
 <div class="api-row"><span class="api-name"><span class="api-dot off" id="openaiDot"></span> OpenAI</span><button class="btn-test-api" id="testOpenAI">Otestovat</button></div><div class="api-result" id="openaiResult"></div>
 <div class="api-row"><span class="api-name"><span class="api-dot off" id="claudeDot"></span> Claude</span><button class="btn-test-api" id="testClaude">Otestovat</button></div><div class="api-result" id="claudeResult"></div></div>
 <div class="actions"><button class="btn btn-primary" id="processBtn">Zpracovat</button><button class="btn btn-secondary" id="settingsBtn">Nastaveni</button></div>
-<div class="footer">v3.6.1 • <a href="#" id="checkUpdateBtn">Zkontrolovat aktualizace</a></div>
+<div class="footer">v3.6.1 \u2022 <a href="#" id="checkUpdateBtn">Zkontrolovat aktualizace</a></div>
 <div class="status-message" id="statusMessage"></div>
 <script src="popup.js"></script></body></html>
