@@ -32,8 +32,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.storage.sync.set({settings});
     await chrome.storage.local.set({status:currentStatus});
   }
-  // Clear any cached auth tokens on install/update to prevent stale token issues
-  try { await chrome.identity.clearAllCachedAuthTokens(); console.log('Auth tokens cleared on install/update'); } catch(e) { console.log('clearAllCachedAuthTokens not available:', e.message); }
+  try { await chrome.storage.local.remove('oauth_token'); await chrome.identity.clearAllCachedAuthTokens(); console.log('Auth tokens cleared on install/update'); } catch(e) { console.log('Token clear on install:', e.message); }
   await chrome.alarms.create('emailScan',{periodInMinutes:10});
   await chrome.alarms.create('updateCheck',{periodInMinutes:UPDATE_CONFIG.checkIntervalHours*60});
   checkForUpdates();
@@ -84,7 +83,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     downloadUpdate(message.url, message.version).then(r=>sendResponse(r)).catch(e=>sendResponse({success:false,error:e.message}));
     return true;
   }
-  // FIX v3.6.0: Forward closeSidebar to Gmail tabs (fallback for iframe postMessage)
   if (message.action === 'closeSidebar') {
     chrome.tabs.query({url:'*://mail.google.com/*'}, tabs => {
       tabs.forEach(tab => chrome.tabs.sendMessage(tab.id, {action:'closeSidebar'}).catch(()=>{}));
@@ -97,8 +95,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'clearAuthTokens') {
     (async()=>{
-      try { await chrome.identity.clearAllCachedAuthTokens(); sendResponse({success:true,message:'Vsechny tokeny vymazany'}); }
-      catch(e) { sendResponse({success:false,error:e.message}); }
+      try {
+        await chrome.storage.local.remove('oauth_token');
+        try { await chrome.identity.clearAllCachedAuthTokens(); } catch(e) {}
+        sendResponse({success:true,message:'Vsechny tokeny vymazany'});
+      } catch(e) { sendResponse({success:false,error:e.message}); }
     })();
     return true;
   }
@@ -143,7 +144,6 @@ async function checkForUpdates() {
     chrome.action.setBadgeText({text:hasUpdate?'!':''});
     if (hasUpdate) {
       chrome.action.setBadgeBackgroundColor({color:'#ea4335'});
-      // Auto-download update ZIP
       try { await downloadUpdate(info.downloadUrl, rv); } catch(e) {}
     }
     return {success:true,...info};
@@ -160,7 +160,6 @@ async function downloadUpdate(url, version) {
       saveAs: false
     });
     await chrome.storage.local.set({lastDownloadedVersion:version,downloadId});
-    // Show notification
     chrome.notifications.create('update-downloaded',{
       type:'basic',
       iconUrl:'icons/icon128.png',
@@ -175,13 +174,29 @@ async function downloadUpdate(url, version) {
 
 function cmpVer(a,b) { const pa=a.split('.').map(Number),pb=b.split('.').map(Number); for(let i=0;i<Math.max(pa.length,pb.length);i++){const na=pa[i]||0,nb=pb[i]||0;if(na>nb)return 1;if(na<nb)return -1;} return 0; }
 
+const WEB_CLIENT_ID = '22130421265-c7jj9dd4qg15tsih7f5sajrpcqbdiscg.apps.googleusercontent.com';
+const REDIRECT_URL = 'https://ofcgpmekaofekbkfpfmagafodgmepbhl.chromiumapp.org/';
+const SCOPES = 'https://www.googleapis.com/auth/gmail.modify email';
+
 async function getValidToken(interactive) {
   try {
-    const result = await chrome.identity.getAuthToken({interactive});
-    const token = (typeof result === 'string') ? result : result?.token;
-    if (!token) { if(interactive) throw new Error('Token nebyl ziskan'); return null; }
-    const r = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile',{headers:{'Authorization':'Bearer '+token}});
-    if (!r.ok) { if(r.status===401){await chrome.identity.removeCachedAuthToken({token:token});const r2=await chrome.identity.getAuthToken({interactive});return (typeof r2==='string')?r2:r2?.token||null;} throw new Error('API chyba: '+r.status); }
+    const cached = await chrome.storage.local.get('oauth_token');
+    if (cached.oauth_token) {
+      const r = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile',{headers:{'Authorization':'Bearer '+cached.oauth_token}});
+      if (r.ok) return cached.oauth_token;
+      await chrome.storage.local.remove('oauth_token');
+    }
+    if (!interactive) return null;
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth' +
+      '?client_id=' + encodeURIComponent(WEB_CLIENT_ID) +
+      '&redirect_uri=' + encodeURIComponent(REDIRECT_URL) +
+      '&response_type=token' +
+      '&scope=' + encodeURIComponent(SCOPES) +
+      '&prompt=consent';
+    const responseUrl = await chrome.identity.launchWebAuthFlow({url: authUrl, interactive: true});
+    const token = new URL(responseUrl.replace('#','?')).searchParams.get('access_token');
+    if (!token) throw new Error('Token nebyl ziskan z OAuth odpovedi');
+    await chrome.storage.local.set({oauth_token: token});
     return token;
   } catch(e) { if(!interactive) return null; throw e; }
 }
@@ -206,7 +221,7 @@ async function processNewEmails(interactive, settings) {
           try{const ar=await aiEngine.classify(parsed,att,settings.rules);if(ar&&ar.confidence>=settings.confidenceThreshold){label=ar.label;status.aiMatched++;}}catch(e){}
         }
         if(label){try{await gmail.ensureLabel(label);await gmail.addLabel(m.id,label);status.labeled++;}catch(e){}}
-        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}}
+        try{await gmail.ensureLabel('EMAIL_SORTER_PROCESSED');await gmail.addLabel(m.id,'EMAIL_SORTER_PROCESSED');}catch(e){}
         status.processed++;
       } catch(e){continue;}
     }
