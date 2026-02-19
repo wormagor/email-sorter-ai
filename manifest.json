@@ -10,5 +10,5 @@
   "web_accessible_resources": [{"resources": ["sidebar.html","sidebar.css","sidebar.js"], "matches": ["https://mail.google.com/*"]}],
   "action": {"default_popup": "popup.html", "default_title": "Email Sorter AI v3.6.1"},
   "icons": {"16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png"},
-  "oauth2": {"client_id": "548209150211-onaag5srks9f6gqkpa8ofuejddsvfr2f.apps.googleusercontent.com", "scopes": ["https://www.googleapis.com/auth/gmail.modify","email"]}
+  "oauth2": {"client_id": "22130421265-3hipbr33ade7t5hg2apljm5m8i01v926.apps.googleusercontent.com", "scopes": ["https://www.googleapis.com/auth/gmail.modify","email"]}
 }
